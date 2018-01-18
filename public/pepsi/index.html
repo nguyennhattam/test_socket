@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width initial-scale=1.0 maximum-scale=1.0 user-scalable=yes" />
+<title>Adtima</title>
+<style type="text/css">
+*{margin:0;padding:0;box-sizing:border-box;-moz-box-sizing:border-box;-webkit-box-sizing:border-box}
+body{background-color:#6ba3ff;width:100%}
+body.autoplay .img-touch{display:none!important}
+.img-touch{position:absolute;top:50%;left:50%;width:250px;height:200px;margin-top:-100px;margin-left:-125px}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+<script>
+	var url_string = window.location.href;
+	var url = new URL(url_string);
+	var r_id = url.searchParams.get("r_id");
+
+	var socket = io('http://localhost:3021', {secure: true});
+
+	function clientEmit(action, data) {
+		socket.emit('client_emit', {
+			'action': action,
+			'data': data
+		});
+	}
+
+  // connected
+	socket.on('connect', function() {
+		console.log('connected');
+		if(r_id == null || r_id == "") {
+			clientEmit('create_room');
+		}
+		else {
+			clientEmit('join_room', {
+				'room_id': r_id
+			});
+		}
+	});
+
+  // server message
+	socket.on('server_emit', function(data){
+    console.log('server_emit: ' + JSON.stringify(data));
+    switch(data.action) {
+      case 'created_room':
+				// alert(data.data.room_id);
+      break;
+			case 'joined_room':
+				// alert(data.data.room_id);
+      break;
+			case 'user_join_room':
+				// alert(data.data.socket_id);
+      break;
+      default:
+
+      break;
+    }
+	});
+
+  // disconnect
+	socket.on('disconnect', function(){
+		console.log('disconnect');
+	});
+</script>
+</head>
+<body>
+	<img id='touchIcon' class="img-touch" src="images/touch.png" alt="Adtima">
+</body>
+</html>

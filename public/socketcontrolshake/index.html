@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width initial-scale=1.0 maximum-scale=1.0 user-scalable=yes" />
+<title>Adtima</title>
+<style type="text/css">
+*{margin:0;padding:0;box-sizing:border-box;-moz-box-sizing:border-box;-webkit-box-sizing:border-box}
+body{background-color:#6ba3ff;width:100%}
+body.autoplay .img-touch{display:none!important}
+.img-touch{position:absolute;top:50%;left:50%;width:250px;height:200px;margin-top:-100px;margin-left:-125px}
+</style>
+<script type="text/javascript" src="shake.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+<script>
+	var socket = io('https://notify.brand.zing.vn', {secure: true})
+	var url_string = window.location.href;
+	var url = new URL(url_string);
+	var id = url.searchParams.get("id");
+	socket.emit('control_start_shake', { id: id });
+	socket.on('control_connect_shake', function() {
+		alert('connected')
+	});
+	window.onload = function() {
+		//create a new instance of shake.js.
+		var myShakeEvent = new Shake({
+			threshold: 10
+		});
+		// start listening to device motion
+		myShakeEvent.start();
+		// register a shake event
+		window.addEventListener('shake', shakeEventDidOccur, false);
+	};
+
+	//shake event callback
+	function shakeEventDidOccur () {
+		//put your own code here etc.
+		socket.emit('control_shake', { id: id });
+	}
+</script>
+</head>
+<body>
+	<img id='touchIcon' class="img-touch" src="images/touch.png" alt="Adtima">
+</body>
+</html>
