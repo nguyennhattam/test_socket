@@ -18,44 +18,57 @@ body.autoplay .img-touch{display:none!important}
 	var r_id = url.searchParams.get("r_id");
 
 	var socket = io('http://localhost:3021', {secure: true});
-
-	function clientEmit(action, data) {
-		socket.emit('client_emit', {
-			'action': action,
-			'data': data
-		});
-	}
-
   // connected
 	socket.on('connect', function() {
 		console.log('connected');
 		if(r_id == null || r_id == "") {
-			clientEmit('create_room');
+			socket.emit('host_create_game');
 		}
 		else {
-			clientEmit('join_room', {
-				'room_id': r_id
+			socket.emit('player_join_game', {
+				'gameId': r_id
 			});
 		}
 	});
 
-  // server message
-	socket.on('server_emit', function(data){
-    console.log('server_emit: ' + JSON.stringify(data));
-    switch(data.action) {
-      case 'created_room':
-				// alert(data.data.room_id);
-      break;
-			case 'joined_room':
-				// alert(data.data.room_id);
-      break;
-			case 'user_join_room':
-				// alert(data.data.socket_id);
-      break;
-      default:
+	// server message
+	socket.on('new_game_created', function(data){
+		console.log('new_game_created: ' + JSON.stringify(data));
+	});
 
-      break;
-    }
+	// server message
+	socket.on('player_joined_room', function(data){
+		console.log('player_joined_room: ' + JSON.stringify(data));
+	});
+
+	// server message
+	socket.on('fire', function(data){
+		console.log('fire: ' + JSON.stringify(data));
+	});
+
+	// server message
+	socket.on('end_game', function(data){
+		console.log('end_game: ' + JSON.stringify(data));
+	});
+
+	// server message
+	socket.on('player_error', function(data){
+		console.log('player_error: ' + JSON.stringify(data));
+	});
+
+	// server message
+	socket.on('player_ready', function(data){
+		console.log('player_ready: ' + JSON.stringify(data));
+	});
+
+	// server message
+	socket.on('cancel_start_game', function(data){
+		console.log('cancel_start_game: ' + JSON.stringify(data));
+	});
+
+	// server message
+	socket.on('game_start', function(data){
+		console.log('game_start: ' + JSON.stringify(data));
 	});
 
   // disconnect
