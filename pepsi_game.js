@@ -1,8 +1,8 @@
 var io;
-var gameSocket;
 var uid = require('uid');
 var Room = require('./room');
 var listRoom = {};
+console.log('Start game app !');
 /**
  * This function is called by index.js to initialize a new game instance.
  *
@@ -11,23 +11,23 @@ var listRoom = {};
  */
 exports.initGame = function(sio, socket){
     io = sio;
-    gameSocket = socket;
 
-    gameSocket.emit('connected', { message: "You are connected!" });
+    socket.timeoutId = -1;
+    socket.emit('connected', { message: "You are connected!" });
 
     // disconnect
-    gameSocket.on('disconnect', playerDisconnect);
+    socket.on('disconnect', playerDisconnect);
 
     // Host Events
-    gameSocket.on('host_create_game', hostCreateGame);
-    gameSocket.on('host_start_game', hostStartGame);
+    socket.on('host_create_game', hostCreateGame);
+    socket.on('host_start_game', hostStartGame);
 
     // Player Events
-    gameSocket.on('player_join_game', playerJoinGame);
-    gameSocket.on('player_ready', playerReady);
+    socket.on('player_join_game', playerJoinGame);
+    socket.on('player_ready', playerReady);
 
     // Playing Game
-    gameSocket.on('next_turn', nextTurn);
+    socket.on('next_turn', nextTurn);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -63,6 +63,10 @@ function hostStartGame() {
     var player = room.findNextPlayer();
     if(player) player.emit('fire', {'position': player.position});
     room.isStart = true;
+    clearTimeout(player.timeoutId);
+    player.timeoutId = setTimeout((sock) => {
+      nextTurn(sock);
+    }, 5000, player);
     return;
   }
 
@@ -99,25 +103,42 @@ function playerReady() {
 };
 
 // player complete fire
-function nextTurn() {
-  var room = getRoom(this.gameId);
-  if(room && room.isStart && room.isCurrentPlayer(this)) {
+function nextTurn(sck) {
+  var sock;
+  if(sck) {
+    sock = sck;
+    console.log('nextTurn by timeout ' + sck);
+
+  } else {
+    sock = this;
+    clearTimeout(sock.timeoutId);
+
+    console.log('nextTurn by player ' + sck);
+  }
+
+  var room = getRoom(sock.gameId);
+  if(room && room.isStart && room.isCurrentPlayer(sock)) {
     if(room.checkEndGame()) {
-      broastcastRoom(this.gameId, 'end_game', {});
+      broastcastRoom(sock.gameId, 'end_game', {});
       room.updateEndGame();
     }
     else {
       var player = room.findNextPlayer();
       player.emit('fire', {'position':player.position});
+      clearTimeout(player.timeoutId);
+      player.timeoutId = setTimeout((sock) => {
+        nextTurn(sock);
+      }, 5000, player);
     }
   }
   else {
-    this.emit('next_turn_error', {'message': "Player is not call next_turn."});
+    sock.emit('next_turn_error', {'message': "Player is not call next_turn."});
   }
 }
 
 // player disconnect
 function playerDisconnect() {
+  clearTimeout(this.timeoutId);
   var room = getRoom(this.gameId);
   if(!room) return;
 
@@ -134,6 +155,10 @@ function playerDisconnect() {
         // find next player
         var player = room.findNextPlayer();
         player.emit('fire', {'position':player.position});
+        clearTimeout(player.timeoutId);
+        player.timeoutId = setTimeout((sock) => {
+          nextTurn(sock);
+        }, 5000, player);
         // broastcast player leave room
         broastcastRoom(this.gameId, 'player_leave_room', {'socket':this.id});
       }
