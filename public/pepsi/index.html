@@ -71,6 +71,21 @@ body.autoplay .img-touch{display:none!important}
 		console.log('game_start: ' + JSON.stringify(data));
 	});
 
+	// server message
+	socket.on('player_leave_room', function(data){
+		console.log('player_leave_room: ' + JSON.stringify(data));
+	});
+
+	// server message
+	socket.on('release_room', function(data){
+		console.log('release_room: ' + JSON.stringify(data));
+	});
+
+	// server message
+	socket.on('release_room', function(data){
+		console.log('release_room: ' + JSON.stringify(data));
+	});
+
   // disconnect
 	socket.on('disconnect', function(){
 		console.log('disconnect');
