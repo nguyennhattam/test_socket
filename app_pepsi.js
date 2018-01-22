@@ -6,18 +6,18 @@ app.use('/public', express.static("public"));
 app.set("view engine", "ejs");
 app.set("views", "./views");
 
-app.use(function(req, res, next) {
-  var allowedOrigins = ['http://pepsitet.brand.zing.vn/'];
-  var origin = req.headers.origin;
-  if(allowedOrigins.indexOf(origin) > -1){
-       res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-
-  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  res.header('Access-Control-Allow-Credentials', true);
-  return next();
-});
+// app.use(function(req, res, next) {
+//   var allowedOrigins = ['http://pepsitet.brand.zing.vn/'];
+//   var origin = req.headers.origin;
+//   if(allowedOrigins.indexOf(origin) > -1){
+//        res.setHeader('Access-Control-Allow-Origin', origin);
+//   }
+//
+//   res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+//   res.header('Access-Control-Allow-Headers', 'Content-Type');
+//   res.header('Access-Control-Allow-Credentials', true);
+//   return next();
+// });
 
 var sha1 = require('sha1');
 var server = require('http').Server(app);
