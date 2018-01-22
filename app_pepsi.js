@@ -7,7 +7,7 @@ app.set("view engine", "ejs");
 app.set("views", "./views");
 
 app.use(function(req, res, next) {
-  var allowedOrigins = ['http://localhost:3021/'];
+  var allowedOrigins = ['http://pepsitet.brand.zing.vn/'];
   var origin = req.headers.origin;
   if(allowedOrigins.indexOf(origin) > -1){
        res.setHeader('Access-Control-Allow-Origin', origin);
@@ -23,7 +23,7 @@ var sha1 = require('sha1');
 var server = require('http').Server(app);
 server = app.listen(3021);
 var io = require('socket.io').listen(server);
-io.origins('http://localhost:3021/');
+// io.origins('http://pepsitet.brand.zing.vn/');
 
 //route
 var appRoute = require('./approute');
