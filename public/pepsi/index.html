@@ -10,12 +10,43 @@
 body{background-color:#6ba3ff;width:100%}
 body.autoplay .img-touch{display:none!important}
 .img-touch{position:absolute;top:50%;left:50%;width:250px;height:200px;margin-top:-100px;margin-left:-125px}
+.IIV::-webkit-media-controls-play-button,
+.IIV::-webkit-media-controls-start-playback-button {
+		opacity: 0;
+		pointer-events: none;
+		width: 5px;
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+<script src="iphone-inline-video.min.js"></script>
+</head>
+<body>
+	<button id="readBtn" style="position:absolute;z-index:11;cursor:pointer;" onclick="onReady();">Ready</button >
+	<br/>
+	<input type="text" value=""  id="codeInput" style="display:none;"/>
+	<button id="copyBtn" style="position:absolute;z-index:11;cursor:pointer;top:60px;display:none;" onclick="onCopy();">Copy</button >
+	<video id="video" playsinline src='https://adtima-video-te-vnso-pt-2.zadn.vn/2017/09/e278715c-19dd-4263-a062-130ae32d5ee5.mp4' muted style="width:100%;height:100%;position:absolute;z-index:1;"></video>
+</body>
 <script>
+	var front = 'https://adtima-video-tr.zadn.vn/2018/01/593b8426-49cb-43e1-8923-99320ad56454.mp4';
+	var mid = 'https://adtima-video-tr.zadn.vn/2018/01/ec80a905-3fb7-48a3-88b8-ff691010d859.mp4';
+	var end = 'https://adtima-video-tr.zadn.vn/2018/01/8c2d8a49-939b-418e-b8a7-4706fc97d046.mp4';
 	var url_string = window.location.href;
 	var url = new URL(url_string);
 	var r_id = url.searchParams.get("r_id");
+	var video = document.getElementById('video');
+	 enableInlineVideo(video);
+
+	var readyBtn = document.getElementById('readBtn');
+	var copyBtn = document.getElementById('copyBtn');
+	var codeInput = document.getElementById('codeInput');
+
+	function onCopy() {
+		codeInput.select();
+  	document.execCommand("Copy");
+		codeInput.style.display = "none";
+		copyBtn.style.display = "none";
+	}
 
 	var socket = io('http://localhost:3021', {secure: true});
   // connected
@@ -34,16 +65,43 @@ body.autoplay .img-touch{display:none!important}
 	// server message
 	socket.on('new_game_created', function(data){
 		console.log('new_game_created: ' + JSON.stringify(data));
+		video.src = front;
+		socket.host = true;
+		readBtn.value = "Start";
+		codeInput.value = url.origin + url.pathname + "?r_id=" + data.gameId;
+		copyBtn.style.display = "block";
+		codeInput.style.display = "block";
 	});
 
 	// server message
 	socket.on('player_joined_room', function(data){
 		console.log('player_joined_room: ' + JSON.stringify(data));
+		if(data.socket == data.player) {
+			socket.host = false;
+			if(data && data.role == 'end') {
+				video.src = end;
+			} else {
+				video.src = mid;
+			}
+		}
 	});
 
 	// server message
 	socket.on('fire', function(data){
 		console.log('fire: ' + JSON.stringify(data));
+		video.currentTime = 0;
+		video.play();
+		video.addEventListener('timeupdate', function () {
+			var del = Math.round((video.currentTime / video.duration) * 100);
+			var currentTime = video.currentTime;
+			if(del >= 85 && !video.callEnd) {
+				video.callEnd = true;
+				socket.emit('next_turn');
+			}
+		});
+		video.addEventListener('ended', function () {
+			video.callEnd = false;
+		});
 	});
 
 	// server message
@@ -57,18 +115,29 @@ body.autoplay .img-touch{display:none!important}
 	});
 
 	// server message
-	socket.on('player_ready', function(data){
-		console.log('player_ready: ' + JSON.stringify(data));
+	socket.on('player_error', function(data){
+		console.log('player_error: ' + JSON.stringify(data));
 	});
 
 	// server message
-	socket.on('cancel_start_game', function(data){
-		console.log('cancel_start_game: ' + JSON.stringify(data));
+	socket.on('player_ready', function(data){
+		console.log('player_ready: ' + JSON.stringify(data));
+		if(data.socket == data.player) {
+			readyBtn.style.display = "none";
+		}
 	});
 
 	// server message
 	socket.on('game_start', function(data){
 		console.log('game_start: ' + JSON.stringify(data));
+		if(data.socket == data.player) {
+			readyBtn.style.display = "none";
+		}
+	});
+
+	// server message
+	socket.on('cancel_start_game', function(data){
+		console.log('cancel_start_game: ' + JSON.stringify(data));
 	});
 
 	// server message
@@ -90,9 +159,20 @@ body.autoplay .img-touch{display:none!important}
 	socket.on('disconnect', function(){
 		console.log('disconnect');
 	});
+
+	function onReady() {
+		console.log(socket);
+		try{
+			video.play();
+			video.pause();
+		} catch(err) {
+			alert("Autoplay Error!");
+		}
+		if(socket.host) {
+			socket.emit('host_start_game');
+		} else {
+			socket.emit('player_ready');
+		}
+	}
 </script>
-</head>
-<body>
-	<img id='touchIcon' class="img-touch" src="images/touch.png" alt="Adtima">
-</body>
 </html>

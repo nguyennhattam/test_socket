@@ -59,7 +59,8 @@ function hostCreateGame() {
 function hostStartGame() {
   var room = getRoom(this.gameId);
   if(room && !room.isStart && room.canStartGame() && this.role === 'front') {
-    broastcastRoom(this.gameId, 'game_start', {});
+    console.log(this.gameId + " game_start");
+    broastcastRoom(this.gameId, 'game_start', {'player':this.id});
     var player = room.findNextPlayer();
     if(player) player.emit('fire', {'position': player.position});
     room.isStart = true;
@@ -86,7 +87,7 @@ function playerJoinGame(data) {
   if(room && !room.isStart && room.joinRoom(sock)) {
     // set params
     sock.gameId = gameId;
-    broastcastRoom(gameId, 'player_joined_room', {'socket':this.id})
+    broastcastRoom(gameId, 'player_joined_room', {'player':this.id})
   }
   else {
     // Otherwise, send an error message back to the player.
@@ -98,7 +99,7 @@ function playerJoinGame(data) {
 function playerReady() {
   if(!this.ready) {
     this.ready = true;
-    broastcastRoom(this.gameId, 'player_ready', {'message': "player ready! "});
+    broastcastRoom(this.gameId, 'player_ready', {'message': "player ready! ", 'player':this.id});
   }
 };
 
@@ -113,7 +114,7 @@ function nextTurn(sck) {
     sock = this;
     clearTimeout(sock.timeoutId);
 
-    console.log('nextTurn by player ' + sck);
+    console.log('nextTurn by player ' + sock);
   }
 
   var room = getRoom(sock.gameId);
@@ -217,6 +218,7 @@ function broastcastRoom(roomId, action, data) {
   if(room) {
     for (var i = 0; i < room.players.length; i++) {
       var player = room.players[i];
+      data.socket = player.id;
       data.position = player.position;
       data.role = player.role;
       player.emit(action, data);
