@@ -21,7 +21,7 @@ app.set("views", "./views");
 
 var sha1 = require('sha1');
 var server = require('http').Server(app);
-server = app.listen(80);
+server = app.listen(3021);
 var io = require('socket.io').listen(server);
 // io.origins('http://pepsitet.brand.zing.vn/');
 
