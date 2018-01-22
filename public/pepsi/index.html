@@ -48,7 +48,7 @@ body.autoplay .img-touch{display:none!important}
 		copyBtn.style.display = "none";
 	}
 
-	var socket = io('http://localhost:3021', {secure: true});
+	var socket = io('https://pepsitet.herokuapp.com/', {secure: true});
   // connected
 	socket.on('connect', function() {
 		console.log('connected');
