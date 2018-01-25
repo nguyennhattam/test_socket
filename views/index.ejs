@@ -1,6 +1,267 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width initial-scale=1.0 maximum-scale=1.0 user-scalable=yes" />
+<title>Adtima</title>
+<style type="text/css">
+*{margin:0;padding:0;box-sizing:border-box;-moz-box-sizing:border-box;-webkit-box-sizing:border-box}
+body{background-color:#6ba3ff;width:100%}
+body.autoplay .img-touch{display:none!important}
+.img-touch{position:absolute;top:50%;left:50%;width:250px;height:200px;margin-top:-100px;margin-left:-125px}
+.IIV::-webkit-media-controls-play-button,
+.IIV::-webkit-media-controls-start-playback-button {
+		opacity: 0;
+		pointer-events: none;
+		width: 5px;
+}
+</style>
+<script src="http://pepsitet.brand.zing.vn/js/socket.io.js"></script>
+<script src="http://pepsitet.brand.zing.vn/js/iphone-inline-video.min.js"></script>
+</head>
 <body>
-<p>Hi, have a nice day</p>
+	<button id="readBtn" style="position:absolute;z-index:11;cursor:pointer;display:none;top:10px;" onclick="onReady();">Ready</button >
+	<button id="startBtn" style="position:absolute;z-index:11;cursor:pointer;display:none;top:10px;" onclick="onReady();">Start</button >
+	<input type="text" value=""  contenteditable="true" readonly="false" id="codeInput" style="position:absolute;z-index:11;cursor:pointer;display:none;top:40px;"/>
+	<button id="copyBtn" style="position:absolute;z-index:11;cursor:pointer;top:60px;display:none;" onclick="onCopy();">Copy</button >
+	<video id="video" preload="metadata" playsinline muted style="width:100%;height:100%;position:absolute;z-index:1;"></video>
 </body>
+<script>
+
+  // server ads
+	// var front  = 'https://adtima-video-tr.zadn.vn/2018/01/239b4134-39b1-4ece-977b-8a5cd88d0fd4.mp4';
+	// var mid    = 'https://adtima-video-tr.zadn.vn/2018/01/52c8b7a9-491b-4b27-b4fc-308daa24d85e.mp4';
+	// var end    = 'https://adtima-video-tr.zadn.vn/2018/01/8b49a1b7-1411-4a27-be09-0e831c5f937e.mp4';
+
+  // server adtima
+  var front  = 'https://streaming.interactive.brand.zing.vn/media/videos/firecrackers_s_1.mp4';
+	var mid    = 'https://streaming.interactive.brand.zing.vn/media/videos/firecrackers_s_2.mp4';
+	var end    = 'https://streaming.interactive.brand.zing.vn/media/videos/firecrackers_s_3.mp4';
+
+	var url_string = window.location.href;
+	var url = new URL(url_string);
+	var r_id = url.searchParams.get("r_id");
+	var video = document.getElementById('video');
+	enableInlineVideo(video);
+
+	var readyBtn = document.getElementById('readBtn');
+	var startBtn = document.getElementById('startBtn');
+	var copyBtn = document.getElementById('copyBtn');
+	var codeInput = document.getElementById('codeInput');
+
+  function getNewbie() {
+    return getCookie('newbie') == true;
+  }
+
+  function updateNewbie() {
+    setCookie('newbie', 'true', 3600);
+  }
+
+  function setCookie(c_name, value, exdays) {
+    var exdate = new Date();
+    exdate.setDate(exdate.getDate() + exdays);
+    var c_value = escape(value) + ((exdays == null) ? "" : "; expires=" + exdate.toUTCString());
+    document.cookie = c_name + "=" + c_value;
+  }
+
+  function getCookie(c_name) {
+      var i, x, y, ARRcookies = document.cookie.split(";");
+      for (i = 0; i < ARRcookies.length; i++) {
+          x = ARRcookies[i].substr(0, ARRcookies[i].indexOf("="));
+          y = ARRcookies[i].substr(ARRcookies[i].indexOf("=") + 1);
+          x = x.replace(/^\s+|\s+$/g, "");
+          if (x == c_name) {
+              return unescape(y);
+          }
+      }
+  }
+
+	function onCopy() {
+		copyToClipboard(codeInput);
+		// codeInput.select();
+  	// document.execCommand("Copy");
+		codeInput.style.display = "none";
+		copyBtn.style.display = "none";
+	}
+
+	var socket = io('http://pepsitet.brand.zing.vn/', {secure: true});
+  // connected
+	socket.on('connect', function() {
+		console.log('connected');
+		if(r_id == null || r_id == "") {
+			socket.emit('host_create_game');
+		}
+		else {
+			socket.emit('player_join_game', {
+				'gameId': r_id
+			});
+		}
+	});
+
+	// server message
+	socket.on('new_game_created', function(data){
+		video.src = front;
+		socket.host = true;
+
+		startBtn.style.display='block';
+
+
+		codeInput.value = url.origin + url.pathname + "?r_id=" + data.gameId;
+		copyBtn.style.display = "block";
+		codeInput.style.display = "block";
+
+		console.log('new_game_created: ' + JSON.stringify(data));
+
+	});
+
+	// server message
+	socket.on('player_joined_room', function(data){
+		console.log('player_joined_room: ' + JSON.stringify(data));
+		if(data.socket == data.player) {
+			socket.host = false;
+			document.getElementById('readBtn').style.display='block';
+			if(data && data.role == 'end') {
+				video.src = end;
+        socket.end = true;
+			} else {
+				video.src = mid;
+			}
+		}
+	});
+
+	// server message
+	socket.on('fire', function(data){
+		console.log('fire: ' + JSON.stringify(data));
+		video.currentTime = 0;
+		video.muted = false;
+		video.play();
+		video.addEventListener('timeupdate', function () {
+			var del = Math.round((video.currentTime / video.duration) * 100);
+			var currentTime = video.currentTime;
+			if(del >= 50 && !video.callEnd) {
+				video.callEnd = true;
+				socket.emit('next_turn');
+			}
+		});
+		video.addEventListener('ended', function () {
+			video.callEnd = false;
+		});
+	});
+
+	// server message
+	socket.on('end_game', function(data){
+		console.log('end_game: ' + JSON.stringify(data));
+		if(socket.host) {
+			copyBtn.style.display = "block";
+			codeInput.style.display = "block";
+
+		} else {
+			readyBtn.style.display = "block";
+		}
+	});
+
+	// server message
+	socket.on('player_error', function(data){
+		console.log('player_error: ' + JSON.stringify(data));
+	});
+
+	// server message
+	socket.on('player_ready', function(data){
+		console.log('player_ready: ' + JSON.stringify(data));
+		if(data.socket == data.player) {
+			readyBtn.style.display = "none";
+		}
+	});
+
+	// server message
+	socket.on('game_start', function(data){
+		console.log('game_start: ' + JSON.stringify(data));
+		if(data.socket == data.player) {
+			readyBtn.style.display = "none";
+		}
+	});
+
+	// server message
+	socket.on('cancel_start_game', function(data){
+		console.log('cancel_start_game: ' + JSON.stringify(data));
+	});
+
+	// server message
+	socket.on('player_leave_room', function(data){
+		console.log('player_leave_room: ' + JSON.stringify(data));
+		if(!socket.end && data && data.role == 'end') {
+      socket.end = true;
+			video.src = end;
+		}
+	});
+
+	// server message
+	socket.on('release_room', function(data){
+		console.log('release_room: ' + JSON.stringify(data));
+	});
+
+  // disconnect
+	socket.on('disconnect', function(){
+		console.log('disconnect');
+	});
+
+	function onPlayingHDL() {
+		video.removeEventListener('playing', onPlayingHDL);
+		video.pause();
+	}
+
+	function onReady() {
+		console.log(socket);
+		try{
+			video.addEventListener('playing', onPlayingHDL);
+			video.play();
+		} catch(err) {
+			alert("Autoplay Error!");
+		}
+		if(socket.host) {
+			socket.emit('host_start_game');
+		} else {
+			socket.emit('player_ready');
+		}
+	}
+
+	function copyToClipboard(el) {
+
+    // resolve the element
+    el = (typeof el === 'string') ? document.querySelector(el) : el;
+
+    // handle iOS as a special case
+    if (navigator.userAgent.match(/ipad|ipod|iphone/i)) {
+
+        // save current contentEditable/readOnly status
+        var editable = el.contentEditable;
+        var readOnly = el.readOnly;
+
+        // convert to editable with readonly to stop iOS keyboard opening
+        el.contentEditable = true;
+        el.readOnly = true;
+
+        // create a selectable range
+        var range = document.createRange();
+        range.selectNodeContents(el);
+
+        // select the range
+        var selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        el.setSelectionRange(0, 999999);
+
+        // restore contentEditable/readOnly to original state
+        el.contentEditable = editable;
+        el.readOnly = readOnly;
+    }
+    else {
+        el.select();
+    }
+
+    // execute copy command
+    document.execCommand('copy');
+}
+</script>
 </html>

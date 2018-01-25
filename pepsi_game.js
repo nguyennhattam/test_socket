@@ -2,6 +2,7 @@ var io;
 var uid = require('uid');
 var Room = require('./room');
 var listRoom = {};
+var duration = 4000;
 console.log('Start game app !');
 /**
  * This function is called by index.js to initialize a new game instance.
@@ -42,7 +43,7 @@ function hostCreateGame() {
   }
 
   // Create a unique Socket.IO Room
-  var thisGameId = uid();
+  var thisGameId = uid(5);
   var room = createRoom(thisGameId);
   room.reset();
 
@@ -67,7 +68,7 @@ function hostStartGame() {
     clearTimeout(player.timeoutId);
     player.timeoutId = setTimeout((sock) => {
       nextTurn(sock);
-    }, 5000, player);
+    }, duration, player);
     return;
   }
 
@@ -129,7 +130,7 @@ function nextTurn(sck) {
       clearTimeout(player.timeoutId);
       player.timeoutId = setTimeout((sock) => {
         nextTurn(sock);
-      }, 5000, player);
+      }, duration, player);
     }
   }
   else {
@@ -147,7 +148,7 @@ function playerDisconnect() {
     if(room.isCurrentPlayer(this)) { // this player is firing
       // leave room
       room.leaveRoom(this.position);
-      console.log('isCurrentPlayer>> ' + this.position);
+      console.log('isCurrentPlayer>> ' + this.position + " -- " +  this.role);
       if(room.checkEndGame()) { // check end game
         // broastcast end game
         broastcastRoom(this.gameId, 'end_game', {});
@@ -159,7 +160,7 @@ function playerDisconnect() {
         clearTimeout(player.timeoutId);
         player.timeoutId = setTimeout((sock) => {
           nextTurn(sock);
-        }, 5000, player);
+        }, duration, player);
         // broastcast player leave room
         broastcastRoom(this.gameId, 'player_leave_room', {'socket':this.id});
       }
@@ -218,6 +219,7 @@ function broastcastRoom(roomId, action, data) {
   if(room) {
     for (var i = 0; i < room.players.length; i++) {
       var player = room.players[i];
+      data.total = room.players.length;
       data.socket = player.id;
       data.position = player.position;
       data.role = player.role;

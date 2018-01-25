@@ -2,9 +2,9 @@
   "name": "notifyct",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "app_pepsi.js",
   "scripts": {
-    "start": "node app_pepsi.js",
+    "start": "nodemon app_pepsi.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "hoanhk",
@@ -20,7 +20,6 @@
     "request": "^2.83.0",
     "sha1": "^1.1.1",
     "socket.io": "^2.0.4",
-    "socket.io-client": "^2.0.4",
-    "uid": "0.0.2"
+    "socket.io-client": "^2.0.4"
   }
 }

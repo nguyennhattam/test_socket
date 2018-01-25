@@ -24,7 +24,11 @@ Room.prototype = {
 
   leaveRoom: function(position) {
     if(position >= 0 && position < this.players.length) {
-      var splicePlayer = this.players.splice(position, 1);
+      var splicePlayer = this.players[position];
+
+      // remove player
+      this.players.splice(position, 1);
+      // update role
       if(splicePlayer.role === "end" && this.players.length > 1) {
         this.players[this.players.length - 1].role = 'end';
       }
@@ -106,8 +110,10 @@ Room.prototype = {
       } else { // normal player
         player.role = "player";
         player.ready = false;
-        this.players.splice(1, 0, player);
+        this.players.splice(this.players.length - 1, 0, player);
       }
+
+      player.ready = true;
 
       console.log('addPlayer>> ' + player.id + " : " + this.id + " -- "+ player.role + " : " + player.ready);
 

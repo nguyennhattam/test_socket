@@ -2,12 +2,13 @@
 var express = require("express");
 var app = express();
 
-app.use('/public', express.static("public"));
+app.use('/', express.static("public"));
 app.set("view engine", "ejs");
 app.set("views", "./views");
 
 app.use(function(req, res, next) {
-  var allowedOrigins = ['http://pepsitet.brand.zing.vn/'];
+  var allowedOrigins = ['http://pepsitet.brand.zing.vn/', "*"];
+  // var allowedOrigins = ['http://pepsitet.brand.zing.vn/'];
   var origin = req.headers.origin;
   if(allowedOrigins.indexOf(origin) > -1){
        res.setHeader('Access-Control-Allow-Origin', origin);
@@ -23,7 +24,8 @@ var sha1 = require('sha1');
 var server = require('http').Server(app);
 server = app.listen(80);
 var io = require('socket.io').listen(server);
-// io.origins('http://pepsitet.brand.zing.vn/');
+io.origins(['pepsitet.brand.zing.vn:80', "*:*"]);
+// io.origins(['pepsitet.brand.zing.vn:80']);
 
 //route
 var appRoute = require('./approute');
