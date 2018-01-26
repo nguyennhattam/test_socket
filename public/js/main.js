@@ -1,6 +1,5 @@
 function preLoad() {
     $("body").addClass('load-animate');
-    homeState();
 }
 window.addEventListener('load', preLoad);
 
@@ -88,7 +87,7 @@ var code_input = document.getElementById('code_input');
 var submitBtn = document.getElementById('submitBtn');
 
 var video_container = document.getElementById('video_container');
-
+var autoJoin = false;
 // addEventListener
 createBtn.addEventListener('click', function(e) {
   hostState();
@@ -113,15 +112,11 @@ readyBtn.addEventListener('click', function(e) {
 });
 
 startBtn.addEventListener('click', function(e) {
-  if(socket.host) {
-    socket.emit('host_start_game');
-  }
+  if(startBtn.lock) return;
 
-  var isMember = getMember();
-  if(!isMember) {
-    updateMember();
-    delay_fire.style.display = "none";
-    video_container.style.display = 'block';
+  if(socket.host) {
+    startBtn.lock = true;
+    socket.emit('host_start_game');
   }
 });
 
@@ -133,6 +128,7 @@ function homeState() {
   player_fire.style.display = "none";
   modal_txt.style.display = "none";
   end_game.style.display = "none";
+  delay_fire.style.display = "none";
 }
 
 function hostState() {
@@ -141,8 +137,21 @@ function hostState() {
   // conlan.style.display = "none";
   // home.style.display = "none";
   host_room.style.display = "block";
-  $('#footer').removeClass('stick');
   connectSocket();
+}
+
+function autoJoinState() {
+  host_room.style.display = "none";
+  player_room.style.display = "none";
+  player_ready.style.display = "none";
+  player_fire.style.display = "none";
+  modal_txt.style.display = "none";
+  end_game.style.display = "none";
+  delay_fire.style.display = "none";
+
+  removeEl(conlan);
+  removeEl(home);
+  $('#footer').addClass('stick');
 }
 
 function playerRoomState() {
@@ -150,13 +159,19 @@ function playerRoomState() {
   removeEl(home);
   // conlan.style.display = "none";
   // home.style.display = "none";
+  $('.s-wrapper').removeClass('home-page');
+  $('.s-wrapper').addClass('game-page');
   player_room.style.display = "block";
+  $('#footer').addClass('stick');
 }
 
 function playerReadyState() {
   removeEl(player_room);
   // player_room.style.display = "none";
   player_ready.style.display = "block";
+  $('.s-wrapper').removeClass('home-page');
+  $('.s-wrapper').addClass('game-page');
+  console.log('playerReadyState: ' + player_ready.style.display);
 }
 
 function playerFireState() {
@@ -171,14 +186,16 @@ function playerFireState() {
 
   if(socket.host) {
     var isMember = getMember();
+    delay_fire.style.display = "block";
     if(isMember === true) {
-        removeEl(delay_fire);
+        removeEl(modal_txt);
         // delay_fire.style.display = "none";
         video_container.style.display = 'block';
-        if(socket.host) {
-          socket.emit('host_start_game');
-        }
+        // if(socket.host) {
+        //   socket.emit('host_start_game');
+        // }
     } else {
+      modal_txt.style.display = "block";
       delay_fire.style.display = "block";
     }
   } else {
@@ -233,6 +250,13 @@ function onPlayingHDL() {
 	var video = document.getElementById('video');
 	enableInlineVideo(video);
 
+  homeState();
+
+  if(r_id && r_id.length == 5) {
+    autoJoin = true;
+    connectSocket();
+  }
+
   function getMember() {
     return getCookie('member') === 'true';
   }
@@ -261,7 +285,7 @@ function onPlayingHDL() {
   }
 
 	function onCopy() {
-		copyToClipboard(code_txt);
+		// copyToClipboard(code_txt);
 		// code_txt.select();
   	// document.execCommand("Copy");
 		code_txt.style.display = "none";
@@ -291,11 +315,16 @@ function onPlayingHDL() {
   		socket.host = true;
   		code_txt.innerHTML = data.gameId;
   		console.log('new_game_created: ' + JSON.stringify(data));
+      var codeLink = url.origin + url.pathname + "?r_id=" + data.gameId;
+      var qrcode = new QRCode(document.getElementById("qrcode"), codeLink);
   	});
 
   	// server message
   	socket.on('player_joined_room', function(data){
   		console.log('player_joined_room: ' + JSON.stringify(data));
+      if(autoJoin && data.socket == data.player) {
+        autoJoinState();
+      }
 
   		if(data.socket == data.player) {
   			socket.host = false;
@@ -358,6 +387,19 @@ function onPlayingHDL() {
   	socket.on('game_start', function(data){
   		console.log('game_start: ' + JSON.stringify(data));
       playerFireState();
+      if(socket.host) {
+        var isMember = getMember();
+        if(!isMember) {
+          updateMember();
+          delay_fire.style.display = "none";
+          video_container.style.display = 'block';
+        }
+        else {
+          delay_fire.style.display = "none";
+        }
+
+        startBtn.lock = false;
+      }
   	});
 
   	// server message
@@ -377,11 +419,13 @@ function onPlayingHDL() {
   	// server message
   	socket.on('release_room', function(data){
   		console.log('release_room: ' + JSON.stringify(data));
+      reloadPage();
   	});
 
     // disconnect
   	socket.on('disconnect', function(){
   		console.log('disconnect');
+      // reloadPage();
   	});
   }
 
@@ -427,4 +471,8 @@ function removeEl(el) {
   // resolve the element
   el = (typeof el === 'string') ? document.querySelector(el) : el;
   if(el && el.parentNode) el.parentNode.removeChild(el);
+}
+
+function reloadPage() {
+  window.location.reload();
 }

@@ -18,6 +18,7 @@
 	</style>
 	<script src="js/socket.io.js"></script>
 	<script src="js/iphone-inline-video.min.js"></script>
+	<script src="js/qrcode.js"></script>
 </head>
 <body class="t-pepsi app-only">
 	<div id="wrapper" class="s-wrapper home-page">
@@ -49,7 +50,9 @@
 			<!-- content	3-->
 			<div id='host_room' class="s-content-2">
 				<div id='copyBtn' class="bl-qr e-animate e-fadeIn" data-transition-delay=".25s">
-					<img class="o-image--responsive" src="images/qrcode.png" alt="Project"/>
+					<!--img class="o-image--responsive" src="images/qrcode.png" alt="Project"/ -->
+					<div id='qrcode' class="o-image--responsive" alt="Project">
+					</div>
 					<p>Hãy mời bạn bè gia đình scan QR code hoặc nhập dãy số dưới đây vào để tham gia cùng.</p>
 					<div id='code_txt' class="bl-code">-----</div>
 				</div>
@@ -80,21 +83,22 @@
 			</div>
 
 			<!-- content	6-->
-			<div id='player_fire'>
+			<div id='delay_fire' class="s-content-3 e-animate e-fadeIn" data-transition-delay=".5s" style="z-index:500">
+				<div class="bl-pos-center bl-dt">
+					<div class="bl-stt">Số thứ tự của bạn <span>1</span></div>
+					<div class="g-button">
+						<a id="startBtn" class="o-button  o-button--red" href="javascript:void(0);" data-toggle="modal" data-target="#modal-txt">Đốt pháo <i class="icon-logo"></i></a>
+					</div>
+				</div>
+			</div>
+			<div id='player_fire' style="position: relative; z-index: 100">
 				<div id='video_container' class="s-video-w">
 					<video id="video" preload="metadata" playsinline muted style="width:100%;height:100%;position:absolute;z-index:1;"></video>
-				</div>
-				<div id='delay_fire' class="s-content-3 e-animate e-fadeIn" data-transition-delay=".5s">
-					<div class="bl-pos-center bl-dt">
-						<div class="g-button mt50">
-							<a id="startBtn" class="o-button  o-button--red" href="javascript:void(0);" data-toggle="modal" data-target="#modal-txt">Đốt pháo <i class="icon-logo"></i></a>
-						</div>
-					</div>
 				</div>
 			</div>
 
 			<!-- footer-->
-			<div id='footer' class="s-footer stick">
+			<div id='footer' class="s-footer">
 				<div class="bottle-ps">
 					<div class="bubble e-animate e-fadeIn" data-transition-delay="2s">
 						<div class="bb bb1"></div>
@@ -144,10 +148,11 @@
                 <img class="o-image--responsive" src="images/sologun.png" alt="Project"/>
               </div>
               <div class="g-button">
+								<div class="zalo-share-button" data-href="http://pepsitet.brand.zing.vn/" data-oaid="155501745225168910" data-layout="2" data-color="blue" data-customize=true>
+										<a class="o-button  o-button--grey" href="#">Chia sẻ</a>
+								</div>
 
-                <a class="o-button  o-button--grey" href="#">Chia sẻ</a>
-
-                <a class="o-button  o-button--grey" href="index.html">Chơi lại</a>
+                <a class="o-button  o-button--grey" href="javascript:void(0);" onclick="reloadPage();">Chơi lại</a>
               </div>
             </div>
           </div>
@@ -167,4 +172,5 @@
 <script src="js/jquery.min.js" type="text/javascript"></script>
 <script src="js/main.js" type="text/javascript"></script>
 <script src="js/modal.js" type="text/javascript"></script>
+<script src="https://sp.zalo.me/plugins/sdk.js"></script>
 </html>
