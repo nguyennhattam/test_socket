@@ -1130,6 +1130,8 @@ img { border: 0; }
 
 .t-pepsi #player_fire #delay_fire { position: absolute; left: 50%; top: 50%; bottom: auto; right: auto; z-index: 100; -webkit-transform: translateX(-50%) translateY(-50%); -moz-transform: translateX(-50%) translateY(-50%); -ms-transform: translateX(-50%) translateY(-50%); -o-transform: translateX(-50%) translateY(-50%); transform: translateX(-50%) translateY(-50%); }
 
+.t-pepsi #delay_fire { position: relative; z-index: 600 !important; }
+
 .zalo-share-button { display: inline-block; }
 
 .modal-backdrop.in { background-color: #022b58; opacity: 0.9; filter: alpha(opacity=90); }
